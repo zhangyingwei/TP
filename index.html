@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>index</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<script src="http://util.zhangyingwei.com/js/jquery.min.js"></script>
+	<script src="js/jtopo-0.4.8-min.js"></script>
+	<script src="js/TP.js"></script>
+</head>
+<body>
+<div id="TP"></div>
+<script>
+    var TP = new TP({
+        el: "#TP",
+        width: 1200,
+        height: 700,
+        background: "./img/bg.jpg",
+        item: [{
+            id: 1,
+            title: "ip",
+            type: "个人计算机",
+            point:{
+                img: "./icon/yun.png",
+                x: 2,
+                y: 0
+            },
+            msg: {
+                ip: "10.0.0.0",
+                dns: "fasfdafd"
+            },
+            item: [{
+                id: 2,
+                title: "ip",
+                danger: "二级威胁",
+                type: "个人计算机",
+                point:{
+                    img: "./img/jsj.jpg",
+                    x: 1,
+                    y: 2
+                },
+                msg: {
+                    ip: "10.0.0.1",
+                    dns: "fasfdafd"
+                }
+            },{
+                id: 3,
+                title: "ip",
+                type: "个人计算机",
+                point:{
+                    img: "./img/jsj.jpg",
+                    x: 3,
+                    y: 2
+                },
+                msg: {
+                    ip: "10.0.0.2",
+                    dns: "fasfdafd"
+                }
+            }]
+        }]
+    });
+</script>
+</body>
+</html>
