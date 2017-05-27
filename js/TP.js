@@ -7,7 +7,7 @@
  */
 function TP(option){
     this.option = option;
-    this.nodeMap = {}
+    this.nodeMap = {};
     this.el = $(option.el);
     this.width = option.width;
     this.height = option.height;
@@ -33,11 +33,7 @@ function TP(option){
         "14": this.resourcesPrefix+"icon/yjfwq.png",
         "15": this.resourcesPrefix+"icon/yun.png"
     }
-    this.drow();
-}
-
-TP.prototype.load = function(option){
-
+    this.draw();
 }
 
 /**
@@ -65,6 +61,7 @@ TP.prototype.init = function(){
     if(this.background){
         this.scene.background = this.background;
     }else if(this.backgroundColor){
+        this.scene.alpha = 10;
         this.scene.backgroundColor = this.backgroundColor;
     }
     this.initTipPanel();
@@ -351,6 +348,8 @@ TP.prototype.createNode = function (x,y,img,danger,msg,title) {
     node.addEventListener('mousedrag',function(){
         self.currentNode = this;
         console.log("mousedrag");
+        this.item.point.x = this.x;
+        this.item.point.y = this.y;
     });
     return node;
 }
@@ -411,36 +410,47 @@ TP.prototype.addLine = function(node){
 /**
  * 先初始化，然后在画图
  */
-TP.prototype.drow = function (){
+TP.prototype.draw = function (){
     this.init();
     var item = this.items;
     if(!item){
         return;
     }
-    this.drowNext(item)
+    this.drawNextNodes(item);
+    this.drawLines();
 }
 
 /**
- * 递归画所有节点
+ * 循环画所有节点
  * @param item
- * @param before
  */
-TP.prototype.drowNext = function(item,before){
+TP.prototype.drawNextNodes = function(item){
+    var self = this;
     for(var i = 0;i<item.length;i++){
-        var it = item[i]
-        var currentNode = this.createNode(it.point.x*80, it.point.y*80, it.point.img, it.danger,it.msg,it.title);
-        currentNode.item = {
-            id: it.id,
-            title: it.title,
-            type: it.type,
-            point:it.point,
-            msg: it.msg
-        };
-        if(before){
-            this.createLine(before, currentNode, true, it.danger);
-        }
-        if(it.item){
-            this.drowNext(it.item,currentNode);
+        var it = item[i];
+        var currentNode = this.createNode(it.point.x, it.point.y, it.point.img, it.danger,it.msg,it.title);
+        currentNode.item = it;
+        self.nodeMap[it.id] = currentNode;
+    }
+}
+
+/**
+ * 连接所有节点
+ */
+TP.prototype.drawLines = function(){
+    var self = this;
+    var nodes = this.nodeMap;
+    for(key in nodes){
+        var node = nodes[key];
+        if(node.item.parent){
+            $.each(node.item.parent,function(){
+                var f = false;
+                var before = self.nodeMap[this];
+                if(node.item.danger|| before.item.danger){
+
+                }
+                self.createLine(before, node, true);
+            });
         }
     }
 }
@@ -451,7 +461,7 @@ TP.prototype.drowNext = function(item,before){
  * @param msg
  */
 TP.prototype.tip = function(event){
-    var msg = this.currentNode.msg;
+    var msg = this.currentNode.item.msg;
     var container = $("#tp-tip");
     var content = "<ul><li class='node-info'>节点信息</li>"
     for( key in msg){
@@ -496,17 +506,19 @@ TP.prototype.tipRemove = function(){
  */
 TP.prototype.nodeEdit = function(event){
     var self = this;
-    var msg = this.currentNode.msg;
-    var title = this.currentNode.title;
+    var msg = this.currentNode.item.msg;
+    var title = this.currentNode.item.title;
     var selectOptionDefalut = [];
     var textAreaDefault = "";
     if(msg){
         for(key in msg){
-            textAreaDefault += key + ":" + msg[key]+"\n";
-            if(title === key){
-                selectOptionDefalut.push("<option selected value='"+key+"'>"+key+"</option>")
-            }else{
-                selectOptionDefalut.push("<option value='"+key+"'>"+key+"</option>")
+            if(key&&msg[key]){
+                textAreaDefault += key + ":" + msg[key]+"\n";
+                if(title === key){
+                    selectOptionDefalut.push("<option selected value='"+key+"'>"+key+"</option>")
+                }else{
+                    selectOptionDefalut.push("<option value='"+key+"'>"+key+"</option>")
+                }
             }
         }
     }
@@ -558,7 +570,24 @@ TP.prototype.nodeEdit = function(event){
         bottom:0
     })
     $("#tp-node-edit .okBtn .saveNodeInfo").click(function(){
-
+        console.log("save")
+        var info = $("#tp-node-edit .content textarea").val();
+        var title = $("#tp-node-edit .content select").val();
+        var infoJson = {};
+        $.each(info.split("\n"),function(){
+            if(this){
+                var kv = this.split(":");
+                infoJson[kv[0]] = kv[1];
+            }
+        })
+        if(infoJson && title && infoJson[title]){
+            self.currentNode.item.msg = infoJson;
+            self.currentNode.item.title = title;
+            self.currentNode.text = infoJson[title];
+            self.nodeEditRemove();
+        }else{
+            alert("保存信息错误");
+        }
     })
     $("#tp-node-edit .okBtn .closeNodeInfo").click(function(){
         self.nodeEditRemove();
@@ -590,7 +619,7 @@ TP.prototype.nodeEdit = function(event){
 }
 
 /**
- * 隐藏tip
+ * 隐藏节点编辑面板
  */
 TP.prototype.nodeEditRemove = function(){
     var container = $("#tp-node-edit");
@@ -654,46 +683,6 @@ TP.prototype.nodeTypeRemove = function(){
 }
 
 /**
- * 把所有节点数据缓存为一个map，方便数据导入导出
- * 主要是导出
- */
-TP.prototype.bulidNodeMap = function(){
-    var option = this.option;
-    var map = {};
-    var item = option.item;
-    function readNext(its){
-        $.each(its,function(){
-            map[this.id] = this;
-            if(this.item){
-                readNext(this.item)
-            }
-        })
-    }
-    readNext(item)
-    this.nodeMap = map;
-}
-
-/**
- * 动态规划节点位置
- */
-TP.prototype.bulicLocation = function(){
-    var location = new Array();
-    var option = this.option;
-    var item = option.item;
-    function readNext(its,dep){
-        if(!location[dep]){
-            location[dep] = new Array();
-        }
-        $.each(its,function(){
-            if(this.item){
-                readNext(this.item,dep)
-            }
-        })
-    }
-    readNext(item,0)
-}
-
-/**
  * 改变画布大小
  * @param width
  * @param height
@@ -704,7 +693,7 @@ TP.prototype.reSize = function(width,height){
     this.option.width = width;
     this.option.height = height;
     this.destory();
-    this.drow();
+    this.draw();
 }
 
 /**
@@ -713,4 +702,15 @@ TP.prototype.reSize = function(width,height){
 TP.prototype.destory = function(){
     $("#tp-canvas").remove()
     $("#tp-tmp").remove()
+}
+
+/**
+ * 导出数据
+ */
+TP.prototype.export = function(){
+    var data = [];
+    for(key in this.nodeMap){
+        data.push(this.nodeMap[key].item)
+    }
+    return data;
 }

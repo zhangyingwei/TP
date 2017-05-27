@@ -1,6 +1,6 @@
 [
   {id: 1, title: "ip", type: "个人计算机", point:{img: "./icon/yun.png", x: 120, y: 0}, msg: { ip: "10.0.0.0", dns: "fasfdafd"}},
   {id: 2, parent: [1], title: "ip", type: "虚机主机", point:{img: "./icon/xnzj.png", x: 60, y: 60}, msg: { ip: "10.0.0.0", dns: "fasfdafd"}},
-  {id: 3, parent: [1], title: "ip", type: "虚机主机", point:{img: "./icon/xnzj.png", x: 180, y: 60}, msg: { ip: "10.0.0.0", dns: "fasfdafd"}},
-  {id: 3, parent: [2,3], title: "ip", type: "虚机主机", point:{img: "./icon/xnzj.png", x: 180, y: 60}, msg: { ip: "10.0.0.0", dns: "fasfdafd"}}
+  {id: 3, parent: [1], title: "ip", danger: "二级威胁", type: "虚机主机", point:{img: "./icon/xnzj.png", x: 180, y: 60}, msg: { ip: "10.0.0.0", dns: "fasfdafd"}},
+  {id: 4, parent: [2,3], title: "ip", type: "虚机主机", point:{img: "./icon/xnzj.png", x: 120, y: 120}, msg: { ip: "10.0.0.0", dns: "fasfdafd"}}
 ]

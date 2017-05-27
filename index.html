@@ -12,20 +12,34 @@
 <div id="TP"></div>
 <script>
     $(function () {
+        var item = {};
         $.ajax({
             url:"data.json",
             type:"GET",
             dataType:'json',
+            async: false,
             success:function(data){
                 console.log("a",data)
             },
             error:function(data){
                 console.log("error")
                 var values = data.responseText;
-                var json = JSON.parse(values);
+                console.log(values)
+                var json = eval("("+values+")");
                 console.log(json);
+                item = json;
             }
         })
+
+        var tp = new TP({
+            el: "#TP",
+            width: 1200,
+            height: 700,
+            background: "./img/bg.jpg",
+            item: item
+        })
+        window.tp = tp;
+        console.log(tp.export())
     })
 //    var TP = new TP({
 //        el: "#TP",
