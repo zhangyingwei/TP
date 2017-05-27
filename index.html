@@ -11,62 +11,78 @@
 <body>
 <div id="TP"></div>
 <script>
-    var TP = new TP({
-        el: "#TP",
-        width: 1200,
-        height: 700,
-        background: "./img/bg.jpg",
-        item: [{
-            id: 1,
-            title: "dns",
-            type: "个人计算机",
-            point:{
-                img: "./icon/yun.png",
-                x: 2,
-                y: 0
+    $(function () {
+        $.ajax({
+            url:"data.json",
+            type:"GET",
+            dataType:'json',
+            success:function(data){
+                console.log("a",data)
             },
-            msg: {
-                ip: "10.0.0.0",
-                dns: "fasfdafd"
-            },
-            item: [{
-                id: 2,
-                title: "ip",
-                danger: "二级威胁",
-                type: "个人计算机",
-                point:{
-                    img: "./icon/xnzj.png",
-                    x: 1,
-                    y: 2
-                },
-                msg: {
-                    ip: "10.0.0.1",
-                    dns: "fasfdafd"
-                }
-            },{
-                id: 3,
-                title: "ip",
-                type: "个人计算机",
-                point:{
-                    img: "./icon/xnzj.png",
-                    x: 3,
-                    y: 2
-                },
-                msg: {
-                    ip: "10.0.0.2",
-                    dns: "fasfdafd",
-                    ip1: "10.0.0.2",
-                    dns1: "fasfdafd",
-                    ip2: "10.0.0.2",
-                    dns2: "fasfdafd",
-                    ip3: "10.0.0.2",
-                    dns3: "fasfdafd",
-                    ip4: "10.0.0.2",
-                    dns4: "fasfdafd"
-                }
-            }]
-        }]
-    });
+            error:function(data){
+                console.log("error")
+                var values = data.responseText;
+                var json = JSON.parse(values);
+                console.log(json);
+            }
+        })
+    })
+//    var TP = new TP({
+//        el: "#TP",
+//        width: 1200,
+//        height: 700,
+//        background: "./img/bg.jpg",
+//        item: [{
+//            id: 1,
+//            title: "ip",
+//            type: "个人计算机",
+//            point:{
+//                img: "./icon/yun.png",
+//                x: 2,
+//                y: 0
+//            },
+//            msg: {
+//                ip: "10.0.0.0",
+//                dns: "fasfdafd"
+//            },
+//            item: [{
+//                id: 2,
+//                title: "ip",
+//                danger: "二级威胁",
+//                type: "个人计算机",
+//                point:{
+//                    img: "./icon/xnzj.png",
+//                    x: 1,
+//                    y: 2
+//                },
+//                msg: {
+//                    ip: "10.0.0.1",
+//                    dns: "fasfdafd"
+//                }
+//            },{
+//                id: 3,
+//                title: "ip",
+//                type: "个人计算机",
+//                point:{
+//                    img: "./icon/xnzj.png",
+//                    x: 3,
+//                    y: 2
+//                },
+//                msg: {
+//                    ip: "10.0.0.2",
+//                    dns: "fasfdafd",
+//                    ip1: "10.0.0.2",
+//                    dns1: "fasfdafd",
+//                    ip2: "10.0.0.2",
+//                    dns2: "fasfdafd",
+//                    ip3: "10.0.0.2",
+//                    dns3: "fasfdafd",
+//                    ip4: "10.0.0.2",
+//                    dns4: "fasfdafd"
+//                }
+//            }]
+//        }]
+//    });
 </script>
 </body>
 </html>

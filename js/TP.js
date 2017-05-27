@@ -1,9 +1,9 @@
 /**
  * 拓扑图组件
- * 依赖jquery
+ * 依赖jquery , jtopo
  * @param option
  * @constructor
- * @author zhangyignwei
+ * @author zhangyingwei
  */
 function TP(option){
     this.option = option;
@@ -12,24 +12,26 @@ function TP(option){
     this.width = option.width;
     this.height = option.height;
     this.background = option.background;
+    this.backgroundColor = option.backgroundColor;
     this.items = option.item;
+    this.resourcesPrefix = "./";
     this.store = {}
     this.iconMap = {"0": "./icon/fhq.png",
-        "1": "./icon/fileserver.png",
-        "2": "./icon/fw.png",
-        "3": "./icon/fwq.png",
-        "4": "./icon/fzjh.png",
-        "5": "./icon/jhj.png",
-        "6": "./icon/khj.png",
-        "7": "./icon/lykzq.png",
-        "8": "./icon/lyq.png",
-        "9": "./icon/webfwq.png",
-        "10": "./icon/wljhj.png",
-        "11": "./icon/wllyq.png",
-        "12": "./icon/wlzj.png",
-        "13": "./icon/xnzj.png",
-        "14": "./icon/yjfwq.png",
-        "15": "./icon/yun.png"
+        "1": this.resourcesPrefix+"icon/fileserver.png",
+        "2": this.resourcesPrefix+"icon/fw.png",
+        "3": this.resourcesPrefix+"icon/fwq.png",
+        "4": this.resourcesPrefix+"icon/fzjh.png",
+        "5": this.resourcesPrefix+"icon/jhj.png",
+        "6": this.resourcesPrefix+"icon/khj.png",
+        "7": this.resourcesPrefix+"icon/lykzq.png",
+        "8": this.resourcesPrefix+"icon/lyq.png",
+        "9": this.resourcesPrefix+"icon/webfwq.png",
+        "10": this.resourcesPrefix+"icon/wljhj.png",
+        "11": this.resourcesPrefix+"icon/wllyq.png",
+        "12": this.resourcesPrefix+"icon/wlzj.png",
+        "13": this.resourcesPrefix+"icon/xnzj.png",
+        "14": this.resourcesPrefix+"icon/yjfwq.png",
+        "15": this.resourcesPrefix+"icon/yun.png"
     }
     this.drow();
 }
@@ -62,8 +64,8 @@ TP.prototype.init = function(){
     this.scene.mode = 'normal';
     if(this.background){
         this.scene.background = this.background;
-    }else{
-        this.scene.backgroundColor = "rgb(187, 187, 187)";
+    }else if(this.backgroundColor){
+        this.scene.backgroundColor = this.backgroundColor;
     }
     this.initTipPanel();
     this.initRightMousePanel();
@@ -323,7 +325,6 @@ TP.prototype.createNode = function (x,y,img,danger,msg,title) {
     //点击事件
     node.addEventListener('click',function(){
         self.currentNode = this;
-        console.log(this)
         if(self.needLine){
             self.addLine(this);
             self.needLine = false;
@@ -345,6 +346,11 @@ TP.prototype.createNode = function (x,y,img,danger,msg,title) {
         if(event.which === 3){
             self.rightClick(event)
         }
+    });
+    //处理拖动事件
+    node.addEventListener('mousedrag',function(){
+        self.currentNode = this;
+        console.log("mousedrag");
     });
     return node;
 }
@@ -370,7 +376,7 @@ TP.prototype.createLine = function(nodeFrom,nodeTo,f){
     var self = this;
     var link;
     if(f){
-        link = new JTopo.FoldLink(nodeFrom, nodeTo);
+        link = new JTopo.FlexionalLink(nodeFrom, nodeTo);
     }else{
         link = new JTopo.Link(nodeFrom, nodeTo);
     }
@@ -423,6 +429,13 @@ TP.prototype.drowNext = function(item,before){
     for(var i = 0;i<item.length;i++){
         var it = item[i]
         var currentNode = this.createNode(it.point.x*80, it.point.y*80, it.point.img, it.danger,it.msg,it.title);
+        currentNode.item = {
+            id: it.id,
+            title: it.title,
+            type: it.type,
+            point:it.point,
+            msg: it.msg
+        };
         if(before){
             this.createLine(before, currentNode, true, it.danger);
         }
@@ -503,7 +516,7 @@ TP.prototype.nodeEdit = function(event){
     editContent += "<tr><td></td><td class='red'>每行算作一条信息,由key:value组成 例： ip:10.0.0.0</td></tr>";
     editContent += "<tr><td>显示名称</td><td><select>"+selectOptionDefalut+"</select></td></tr>";
     editContent += "</table>";
-    container.html("<div class='title'>编辑节点信息</div><div class='content'>"+editContent+"</div><div class='okBtn'><button class='saveNodeInfo'>保存</button></div>")
+    container.html("<div class='title'>编辑节点信息</div><div class='content'>"+editContent+"</div><div class='okBtn'><button class='saveNodeInfo'>保存</button><button class='closeNodeInfo'>关闭</button></div>")
     $("#tp-node-edit .title").css({
         "text-align": "center",
         "font-size": "14px",
@@ -547,13 +560,17 @@ TP.prototype.nodeEdit = function(event){
     $("#tp-node-edit .okBtn .saveNodeInfo").click(function(){
 
     })
+    $("#tp-node-edit .okBtn .closeNodeInfo").click(function(){
+        self.nodeEditRemove();
+    })
     $("#tp-node-edit button").css({
         border: 0,
         padding: "5px 20px",
         background: "#607D8B",
         "font-size": "10px",
         "border-radius":"3px",
-        color: "#e4e4e4"
+        color: "#e4e4e4",
+        "margin-right": "5px"
     });
     $("#tp-node-edit button").mouseover(function(){
         $(this).css({
@@ -591,7 +608,6 @@ TP.prototype.removeNode = function(node){
  * 删除当前选中节点
  */
 TP.prototype.removeCurrentNode = function(){
-    console.log(this.currentNode);
     this.removeNode(this.currentNode)
 }
 
