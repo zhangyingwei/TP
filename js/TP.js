@@ -62,7 +62,7 @@ TP.prototype.init = function(){
     if(this.background){
         this.scene.background = this.background;
     }else if(this.backgroundColor){
-        this.scene.alpha = 10;
+        this.scene.alpha = 0.3;
         this.scene.backgroundColor = this.backgroundColor;
     }
     this.initTipPanel();
@@ -403,6 +403,16 @@ TP.prototype.createLine = function(nodeFrom,nodeTo,f){
     link.direction = 'vertical';
     this.scene.add(link);
     return link;
+}
+
+TP.prototype.effect = function (nodeF,nodeT) {
+    var effect = JTopo.Effect.spring({
+        grivity: 10 // 引力 (可以为负值)
+    })
+    // 效果作用对象(node节点以targetNode为目标，产生弹性效果)
+    effect.addNode(nodeF, nodeT);
+    // 播放
+    effect.play();
 }
 
 /**
