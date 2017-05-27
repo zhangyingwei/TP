@@ -51,6 +51,8 @@ TP.prototype.init = function(){
     this.scene.addEventListener('click', function(e) {
         self.rightClickRemove();
         self.nodeTypeRemove();
+        self.tipRemove();
+        self.nodeEditRemove();
     });
     this.scene.mode = 'normal';
     if(this.background){
@@ -61,7 +63,7 @@ TP.prototype.init = function(){
     this.initTipPanel();
     this.initRightMousePanel();
     this.initNodeTypePanel();
-    this.bulidNodeMap();
+    this.initNodeEditPanel();
 }
 
 /**
@@ -71,15 +73,35 @@ TP.prototype.initTipPanel = function () {
     this.canvas.after("<div id='tp-tip'></div>")
     $("#tp-tip").css({
         width: "180px",
-        height: "200px",
-        border: "1px solid #000",
+        "max-height": "250px",
+        "overflow": "auto",
+        border: "1px solid #f0f0f0",
         position: "absolute",
         display: "none",
         padding: "5px",
-        margin: "5px"
-    })
+        margin: "5px",
+        background: "#f0f0f0",
+        "border-radius": "5px"
+    });
 }
-
+/**
+ * 初始化编辑信息面板
+ */
+TP.prototype.initNodeEditPanel = function () {
+    this.canvas.after("<div id='tp-node-edit'></div>")
+    $("#tp-node-edit").css({
+        width: "500px",
+        height: "300px",
+        "overflow": "auto",
+        border: "1px solid #f0f0f0",
+        position: "absolute",
+        display: "none",
+        padding: "5px",
+        margin: "5px",
+        background: "#f0f0f0",
+        "border-radius": "5px"
+    });
+}
 /**
  * 初始化右键菜单
  */
@@ -95,8 +117,11 @@ TP.prototype.initRightMousePanel = function(){
         name: "添加连线",
         value: 2
     },{
-        name: "查看详情",
+        name: "编辑信息",
         value: 3
+    },{
+        name: "查看详情",
+        value: 4
     }]
     var panel = "<ul>";
     $.each(menus,function () {
@@ -149,7 +174,9 @@ TP.prototype.initRightMousePanel = function(){
                 self.needLine = true;
                 self.beforeNode = self.currentNode
             }else if (action === "3"){
-                console.log("编辑")
+                self.nodeEdit(event);
+            }else if (action === "4"){
+                self.tip(event);
             }
         }else{
             console.log("no node select")
@@ -276,12 +303,14 @@ TP.prototype.createNode = function (x,y,img,danger,msg,title) {
     var self = this;
     var node = new JTopo.Node();
     node.setImage(img, true);
+    node.title = title;
     node.text = msg[title];
     console.log(x, y);
     node.setLocation(x, y);
     node.textOffsetY = 2;
     node.borderRadius = 10;
     node.shadow = "true";
+    node.msg = msg;
     if(danger){
         node.alarm = danger;
     }
@@ -298,12 +327,12 @@ TP.prototype.createNode = function (x,y,img,danger,msg,title) {
     //双击事件
     node.addEventListener('dbclick',function(){
         self.currentNode = this;
-        self.tip(event,msg)
+        self.tip(event);
     });
     //鼠标划出
     node.addEventListener('mouseout',function(){
         self.currentNode = this;
-        self.tipRemove();
+        // self.tipRemove();
     });
     //处理鼠标右击事件
     node.addEventListener('mouseup',function(){
@@ -340,9 +369,11 @@ TP.prototype.createLine = function(nodeFrom,nodeTo,f){
     }else{
         link = new JTopo.Link(nodeFrom, nodeTo);
     }
+    link.arrowsRadius = 6; //箭头大小
     if(nodeFrom.alarm || nodeTo.alarm){
         link.strokeColor = '255,0,0';
     }
+
     //处理鼠标右击事件
     link.addEventListener('mouseup',function(){
         if(event.which === 3){
@@ -401,16 +432,32 @@ TP.prototype.drowNext = function(item,before){
  * @param event
  * @param msg
  */
-TP.prototype.tip = function(event,msg){
+TP.prototype.tip = function(event){
+    var msg = this.currentNode.msg;
     var container = $("#tp-tip");
-    var content = "<ul>"
+    var content = "<ul><li class='node-info'>节点信息</li>"
     for( key in msg){
-        content+="<li>"+key+":"+msg[key]+"</li>"
+        content+="<li>"+key+" : "+msg[key]+"</li>"
     }
     content += "</ul>";
     container.html(content)
+    $("#tp-tip ul").css({
+        "list-style": "none",
+        "text-align": "left",
+        margin: 0,
+        padding: "0px 10px 30px 10px",
+        "font-size": "14px"
+    })
+    $("#tp-tip .node-info").css({
+        "text-align": "center",
+        "line-height": "30px"
+    })
+    $("#tp-tip ul li").css({
+        padding: "2px",
+        "border-bottom": "1px solid #c5c5c5"
+    })
     $("#tp-tip").css({
-        top: event.pageY,
+        top: event.pageY-100,
         left: event.pageX+10,
         padding: '0 10px',
     }).show();
@@ -423,6 +470,110 @@ TP.prototype.tipRemove = function(){
     var container = $("#tp-tip");
     container.html("")
     $("#tp-tip").hide();
+}
+/**
+ * 展示编辑节点面板
+ * @param event
+ * @param msg
+ */
+TP.prototype.nodeEdit = function(event){
+    var self = this;
+    var msg = this.currentNode.msg;
+    var title = this.currentNode.title;
+    var selectOptionDefalut = [];
+    var textAreaDefault = "";
+    if(msg){
+        for(key in msg){
+            textAreaDefault += key + ":" + msg[key]+"\n";
+            if(title === key){
+                selectOptionDefalut.push("<option selected value='"+key+"'>"+key+"</option>")
+            }else{
+                selectOptionDefalut.push("<option value='"+key+"'>"+key+"</option>")
+            }
+        }
+    }
+    var container = $("#tp-node-edit");
+    var editContent = "<table>";
+    editContent += "<tr><td>信息</td><td><textarea name='info' rows=3 cols=20>"+textAreaDefault+"</textarea></td></tr>";
+    editContent += "<tr><td></td><td class='red'>每行算作一条信息,由key:value组成 例： ip:10.0.0.0</td></tr>";
+    editContent += "<tr><td>显示名称</td><td><select>"+selectOptionDefalut+"</select></td></tr>";
+    editContent += "</table>";
+    container.html("<div class='title'>编辑节点信息</div><div class='content'>"+editContent+"</div><div class='okBtn'><button class='saveNodeInfo'>保存</button></div>")
+    $("#tp-node-edit .title").css({
+        "text-align": "center",
+        "font-size": "14px",
+        "height": "40px",
+        padding: "10px"
+    })
+    $("#tp-node-edit .content").css({
+
+    })
+    $("#tp-node-edit .content").css({
+        "font-size": "10px"
+    })
+    $("#tp-node-edit .content select").css({
+        width:"100px"
+    })
+    $("#tp-node-edit .content textarea").css({
+        "width": "400px",
+        "height": "100px"
+    }).blur(function(){
+        var jsonVal = {};
+        var selectOption = [];
+        var val = $(this).val();
+        var valueLines = val.split("\n");
+        $.each(valueLines,function(){
+            var line = this.split(":");
+            selectOption.push("<option value='"+line[0]+"'>"+line[0]+"</option>")
+            jsonVal[line[0]] = line[1];
+        })
+        $("#tp-node-edit .content select").html(selectOption);
+    })
+    $("#tp-node-edit .content .red").css({
+        color: "red",
+        "font-size": "10px"
+    })
+    $("#tp-node-edit .okBtn").css({
+        padding: "10px",
+        position:"absolute",
+        right:0,
+        bottom:0
+    })
+    $("#tp-node-edit .okBtn .saveNodeInfo").click(function(){
+
+    })
+    $("#tp-node-edit button").css({
+        border: 0,
+        padding: "5px 20px",
+        background: "#607D8B",
+        "font-size": "10px",
+        "border-radius":"3px",
+        color: "#e4e4e4"
+    });
+    $("#tp-node-edit button").mouseover(function(){
+        $(this).css({
+            "background": "#795548",
+            cursor: "pointer"
+        });
+    }).mouseout(function(){
+        $(this).css({
+            "background": "#607D8B"
+        });
+    })
+    $("#tp-node-edit").css({
+        top: self.height/2-150,
+        left: self.width/2-250,
+        padding: '0 10px',
+    }).show();
+}
+
+/**
+ * 隐藏tip
+ */
+TP.prototype.nodeEditRemove = function(){
+    var container = $("#tp-node-edit");
+    container.html("");
+    container.hide();
 }
 
 /**
