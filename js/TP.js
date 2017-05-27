@@ -8,13 +8,14 @@
 function TP(option){
     this.option = option;
     this.nodeMap = {};
+    this.change = false;
     this.el = $(option.el);
     this.width = option.width;
     this.height = option.height;
     this.background = option.background;
     this.backgroundColor = option.backgroundColor;
     this.items = option.item;
-    this.resourcesPrefix = "./";
+    this.resourcesPrefix = option.resourcesPrefix?option.resourcesPrefix:"./";
     this.store = {}
     this.iconMap = {"0": "./icon/fhq.png",
         "1": this.resourcesPrefix+"icon/fileserver.png",
@@ -173,12 +174,15 @@ TP.prototype.initRightMousePanel = function(){
                 self.nodeType(event)
             }else if(action==="1"){
                 self.removeCurrentNode();
+                self.change = true;
             }else if(action === "2"){
                 self.currentNode.selected = true;
                 self.needLine = true;
                 self.beforeNode = self.currentNode
+                self.change = true;
             }else if (action === "3"){
                 self.nodeEdit(event);
+                self.change = true;
             }else if (action === "4"){
                 self.tip(event);
             }
@@ -294,6 +298,7 @@ TP.prototype.initNodeTypePanel = function(){
         var icon = self.iconMap[val];
         self.addNode(icon);
         self.nodeTypeRemove();
+        self.change = true;
     })
 }
 
@@ -350,6 +355,7 @@ TP.prototype.createNode = function (x,y,img,danger,msg,title) {
         console.log("mousedrag");
         this.item.point.x = this.x;
         this.item.point.y = this.y;
+        self.change = true;
     });
     return node;
 }
@@ -588,6 +594,7 @@ TP.prototype.nodeEdit = function(event){
         }else{
             alert("保存信息错误");
         }
+        self.change = true;
     })
     $("#tp-node-edit .okBtn .closeNodeInfo").click(function(){
         self.nodeEditRemove();
@@ -712,5 +719,6 @@ TP.prototype.export = function(){
     for(key in this.nodeMap){
         data.push(this.nodeMap[key].item)
     }
+    this.change = false;
     return data;
 }
