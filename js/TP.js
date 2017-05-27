@@ -34,6 +34,10 @@ function TP(option){
     this.drow();
 }
 
+TP.prototype.load = function(option){
+
+}
+
 /**
  * 初始化画布等对象
  */
@@ -41,8 +45,9 @@ TP.prototype.init = function(){
     var self = this;
 	var width = this.width
 	var height = this.height
-	this.el.append("<canvas id='tp-canvas' width='"+width+"' height='"+height+"'></canvas>")
+	this.el.append("<canvas id='tp-canvas' width='"+width+"' height='"+height+"'></canvas><div id='tp-tmp'></div>")
     this.canvas = $("#tp-canvas");
+    this.tmp = $("#tp-tmp");
     this.stage = new JTopo.Stage(this.canvas[0]); // 创建一个舞台对象
     this.scene = new JTopo.Scene(this.stage); // 创建一个场景对象
     this.scene.addEventListener('dbclick', function(e) {
@@ -70,7 +75,7 @@ TP.prototype.init = function(){
  * 初始化tip面板
  */
 TP.prototype.initTipPanel = function () {
-    this.canvas.after("<div id='tp-tip'></div>")
+    this.tmp.append("<div id='tp-tip'></div>")
     $("#tp-tip").css({
         width: "180px",
         "max-height": "250px",
@@ -88,7 +93,7 @@ TP.prototype.initTipPanel = function () {
  * 初始化编辑信息面板
  */
 TP.prototype.initNodeEditPanel = function () {
-    this.canvas.after("<div id='tp-node-edit'></div>")
+    this.tmp.append("<div id='tp-node-edit'></div>")
     $("#tp-node-edit").css({
         width: "500px",
         height: "300px",
@@ -128,7 +133,7 @@ TP.prototype.initRightMousePanel = function(){
         panel+="<li value='"+this.value+"'>"+this.name+"</li>";
     })
     panel += "</ul>";
-    this.canvas.after("<div id='tp-node-right-click'>"+panel+"</div>");
+    this.tmp.append("<div id='tp-node-right-click'>"+panel+"</div>");
     $("#tp-node-right-click").css({
         width: "100px",
         height: "200px",
@@ -244,7 +249,7 @@ TP.prototype.initNodeTypePanel = function(){
         panel+="<li value='"+this.value+"'><img width='20' height='20' src='"+self.iconMap[this.value]+"'/>"+this.name+"</li>";
     })
     panel += "</ul>";
-    this.canvas.after("<div id='tp-node-type'>"+panel+"<div class='clear'></div></div>");
+    this.tmp.append("<div id='tp-node-type'>"+panel+"<div class='clear'></div></div>");
     $("#tp-node-type").css({
         width: "100px",
         border: "1px solid #f1f1f1",
@@ -670,4 +675,26 @@ TP.prototype.bulicLocation = function(){
         })
     }
     readNext(item,0)
+}
+
+/**
+ * 改变画布大小
+ * @param width
+ * @param height
+ */
+TP.prototype.reSize = function(width,height){
+    this.width = width;
+    this.height = height;
+    this.option.width = width;
+    this.option.height = height;
+    this.destory();
+    this.drow();
+}
+
+/**
+ * 销毁画布
+ */
+TP.prototype.destory = function(){
+    $("#tp-canvas").remove()
+    $("#tp-tmp").remove()
 }
