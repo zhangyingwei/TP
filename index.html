@@ -10,6 +10,7 @@
 </head>
 <body>
 <div id="TP"></div>
+<button id="export">导出数据</button>
 <script>
     $(function () {
         var item = {};
@@ -43,6 +44,10 @@
         });
         window.tp = tp;
         console.log(tp.export())
+
+		$("#export").click(function(){
+            console.log(tp.export())
+		})
     })
 //    var TP = new TP({
 //        el: "#TP",

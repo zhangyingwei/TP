@@ -8,7 +8,9 @@
 function TP(option){
     this.option = option;
     this.nodeMap = {};
+    this.childsNodeMap = {};
     this.change = false;
+    this.maxNodeId = 0;
     this.el = $(option.el);
     this.width = option.width;
     this.height = option.height;
@@ -16,6 +18,7 @@ function TP(option){
     this.backgroundColor = option.backgroundColor;
     this.items = option.item;
     this.resourcesPrefix = option.resourcesPrefix?option.resourcesPrefix:"./";
+    this.lineFlexional = option.lineFlexional;
     this.store = {}
     this.iconMap = {"0": "./icon/fhq.png",
         "1": this.resourcesPrefix+"icon/fileserver.png",
@@ -319,7 +322,8 @@ TP.prototype.createNode = function (x,y,img,danger,msg,title) {
     node.textOffsetY = 2;
     node.borderRadius = 10;
     node.shadow = "true";
-    node.msg = msg;
+    node.item = {};
+    node.item.msg = msg;
     if(danger){
         node.alarm = danger;
     }
@@ -366,6 +370,21 @@ TP.prototype.createNode = function (x,y,img,danger,msg,title) {
 TP.prototype.addNode = function(img){
     var before = this.currentNode;
     var nextNode = this.createNode(before.x+100,before.y+100,img,false,{a:"ninfo"},"a")
+    this.maxNodeId +=1;
+    var id = this.maxNodeId;
+    nextNode.item.id = id;
+    nextNode.item.parent = [];
+    nextNode.item.parent.push(before.item.id)
+    nextNode.item.point = {};
+    nextNode.item.point.img = img;
+    nextNode.item.point.x = nextNode.x;
+    nextNode.item.point.y = nextNode.y;
+    nextNode.item.type = "";
+    this.nodeMap[id] = nextNode;
+    if(!this.childsNodeMap[before.item.id]){
+        this.childsNodeMap[before.item.id] = new Array();
+    }
+    this.childsNodeMap[before.item.id].push(nextNode);
     this.createLine(before, nextNode, true, false);
 }
 
@@ -380,6 +399,7 @@ TP.prototype.addNode = function(img){
 TP.prototype.createLine = function(nodeFrom,nodeTo,f){
     var self = this;
     var link;
+    f = this.lineFlexional
     if(f){
         link = new JTopo.FlexionalLink(nodeFrom, nodeTo);
     }else{
@@ -394,6 +414,7 @@ TP.prototype.createLine = function(nodeFrom,nodeTo,f){
     link.addEventListener('mouseup',function(){
         if(event.which === 3){
             self.scene.remove(this)
+            nodeTo.item.parent.removeByValue(nodeFrom.item.id);
         }
     });
     //处理鼠标划过
@@ -420,6 +441,7 @@ TP.prototype.effect = function (nodeF,nodeT) {
  */
 TP.prototype.addLine = function(node){
     var before = this.beforeNode;
+    this.currentNode.item.parent.push(before.id);
     this.createLine(before, this.currentNode, true);
 }
 
@@ -447,6 +469,9 @@ TP.prototype.drawNextNodes = function(item){
         var currentNode = this.createNode(it.point.x, it.point.y, it.point.img, it.danger,it.msg,it.title);
         currentNode.item = it;
         self.nodeMap[it.id] = currentNode;
+        if(self.maxNodeId<it.id){
+            self.maxNodeId = it.id;
+        }
     }
 }
 
@@ -466,6 +491,11 @@ TP.prototype.drawLines = function(){
 
                 }
                 self.createLine(before, node, true);
+
+                if(!self.childsNodeMap[this]){
+                    self.childsNodeMap[this] = new Array();
+                }
+                self.childsNodeMap[this].push(node);
             });
         }
     }
@@ -591,7 +621,7 @@ TP.prototype.nodeEdit = function(event){
         var title = $("#tp-node-edit .content select").val();
         var infoJson = {};
         $.each(info.split("\n"),function(){
-            if(this){
+            if(this&&this.length>0){
                 var kv = this.split(":");
                 infoJson[kv[0]] = kv[1];
             }
@@ -648,7 +678,12 @@ TP.prototype.nodeEditRemove = function(){
  * 删除一个节点
  */
 TP.prototype.removeNode = function(node){
+    var self = this;
     this.scene.remove(node);
+    delete this.nodeMap[node.item.id];
+    $.each(self.childsNodeMap[node.item.id],function(){
+        this.item.parent.removeByValue(node.item.id);
+    })
 }
 /**
  * 删除当前选中节点
@@ -731,4 +766,12 @@ TP.prototype.export = function(){
     }
     this.change = false;
     return data;
+}
+Array.prototype.removeByValue = function(val) {
+    for(var i=0; i<this.length; i++) {
+        if(this[i] == val) {
+            this.splice(i, 1);
+            break;
+        }
+    }
 }
